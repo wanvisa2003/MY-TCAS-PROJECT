@@ -45,7 +45,8 @@ def create_map(university=None):
 app.layout = html.Div([
     html.H1("มหาวิทยาลัยที่เปิดรับคณะวิศวกรรมศาสตร์", style={'text-align': 'center'}),
     dcc.Dropdown(df.uni.unique(), 'มหาวิทยาลัยสงขลานครินทร์', id='dropdown-selection'),
-    dcc.Dropdown(id='department-dropdown', placeholder="เลือกหลักสูตร"),
+    dcc.Dropdown(id='department-dropdown', placeholder="เลือกสาขา"),
+    dcc.Dropdown(id='course-dropdown', placeholder="เลือกหลักสูตร"),
     html.Div(id='output_container', children=[]),
     html.Br(),
     dcc.Graph(id='map', style={'width': '30%'}),
@@ -62,16 +63,29 @@ def set_department_options(selected_university):
     departments = filtered_df['depart'].unique()
     return [{'label': dept, 'value': dept} for dept in departments]
 
+# Update course dropdown options based on the selected depart
+@app.callback(
+    Output('course-dropdown', 'options'),
+    Input('dropdown-selection', 'value'),
+    Input('department-dropdown', 'value')
+)
+
+def set_course_options(selected_university, selected_department):
+    filtered_df = df[(df['uni'] == selected_university) & (df['depart'] == selected_department)]
+    course = filtered_df['course'].unique()
+    return [{'label': cou, 'value': cou} for cou in course]
+
 # Update graphs based on selections
 @app.callback(
     [Output('output_container', 'children'),
      Output('map', 'figure')],
     [Input('dropdown-selection', 'value'),
-     Input('department-dropdown', 'value')]
+     Input('department-dropdown', 'value'),
+     Input('course-dropdown', 'value')]
 )
 
-def update_graphs(selected_university, selected_department):
-    container = f"The University chosen by user was: {selected_university}, Department: {selected_department}"
+def update_graphs(selected_university, selected_department, selected_course):
+    container = f"The University chosen by user was: {selected_university}, Department: {selected_department}, Course: {selected_course}"
 
     dff = df[df["uni"] == selected_university]
 
