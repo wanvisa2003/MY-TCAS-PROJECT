@@ -60,7 +60,7 @@ def create_pie_chart(admission_info):
         'รอบ 4 Direct Admission': admission_info.get('รอบ 4 Direct Admission', 0)
     }
     
-    
+    # Define pastel green colors
     pastel_colors = ['#EADFF2', '#DCCBED', '#FEE5EB', '#FCB7D0']
     
     fig = px.pie(
@@ -72,14 +72,13 @@ def create_pie_chart(admission_info):
     fig.update_layout(
         title_font_size=18,
         margin={"r":0,"t":40,"l":0,"b":0},
-        height=300  # Set the height of the pie chart
+        height=250  # Set the reduced height of the pie chart
     )
     return fig
 
-
 # App layout
 app.layout = html.Div(style={'display': 'flex', 'flex-direction': 'row', 'font-family': 'Arial, sans-serif'}, children=[
-    html.Div(style={'flex': '1', 'padding': '20px', 'background-color': '#f0f2f5', 'border-radius': '10px', 'box-shadow': '0 2px 10px rgba(0,0,0,0.1)', 'margin-right': '20px'}, children=[
+    html.Div(style={'flex': '1', 'padding': '20px', 'background-color': '#f0f2f5', 'border-radius': '10px', 'box-shadow': '0 2px 10px rgba(0,0,0,0.1)', 'margin-right': '10px'}, children=[
         html.H1("มหาวิทยาลัยที่เปิดรับคณะวิศวกรรมศาสตร์", style={'text-align': 'center', 'color': '#333'}),
         dcc.Dropdown(df['มหาวิทยาลัย'].unique(), 'มหาวิทยาลัยสงขลานครินทร์', id='dropdown-selection', style={'margin-bottom': '20px'}),
         dcc.Dropdown(id='department-dropdown', placeholder="เลือกสาขา", style={'margin-bottom': '20px'}),
@@ -88,11 +87,11 @@ app.layout = html.Div(style={'display': 'flex', 'flex-direction': 'row', 'font-f
         html.Br(),
         dcc.Graph(id='map', style={'width': '100%'})
     ]),
-    html.Div(style={'flex': '2', 'padding': '20px', 'background-color': '#ffffff', 'border-radius': '10px', 'box-shadow': '0 2px 10px rgba(0,0,0,0.1)'}, children=[
+    html.Div(style={'flex': '1', 'padding': '20px', 'background-color': '#ffffff', 'border-radius': '10px', 'box-shadow': '0 2px 10px rgba(0,0,0,0.1)'}, children=[
         html.H2('รายละเอียด', style={'text-align': 'center', 'color': '#333'}),
         html.Div(id='text-box-general', style={'whiteSpace': 'pre-line', 'padding': '10px', 'color': '#555', 'font-size': '16px', 'background-color': '#e0f7fa', 'border-radius': '5px', 'box-shadow': '0 2px 10px rgba(0,0,0,0.1)', 'margin-bottom': '20px'}),
         html.Div(id='text-box-admission', style={'whiteSpace': 'pre-line', 'padding': '10px', 'color': '#555', 'font-size': '16px', 'background-color': '#ffe0b2', 'border-radius': '5px', 'box-shadow': '0 2px 10px rgba(0,0,0,0.1)', 'margin-bottom': '20px'}),
-        dcc.Graph(id='pie-chart', style={'width': '100%', 'height': '300px'})  # Set the height of the pie chart container
+        dcc.Graph(id='pie-chart', style={'width': '100%', 'height': '250px'})  # Set the height of the pie chart container
     ])
 ])
 
