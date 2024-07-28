@@ -50,6 +50,7 @@ app.layout = html.Div([
     html.Div(id='output_container', children=[]),
     html.Br(),
     dcc.Graph(id='map', style={'width': '30%'}),
+    html.Div(id='text-box', style={'whiteSpace': 'pre-line'}) # Add this line for the text box
 ])
 
 # Update department dropdown options based on the selected university
@@ -78,7 +79,8 @@ def set_course_options(selected_university, selected_department):
 # Update graphs based on selections
 @app.callback(
     [Output('output_container', 'children'),
-     Output('map', 'figure')],
+     Output('map', 'figure'),
+     Output('text-box', 'children')],
     [Input('dropdown-selection', 'value'),
      Input('department-dropdown', 'value'),
      Input('course-dropdown', 'value')]
@@ -99,7 +101,27 @@ def update_graphs(selected_university, selected_department, selected_course):
         font_color="PaleTurquoise"
     )
 
-    return container, map_fig
+    # Extract fee and round data
+    filtered_df = df[(df['uni'] == selected_university) & 
+                     (df['depart'] == selected_department) & 
+                     (df['course'] == selected_course)]
+    if not filtered_df.empty:
+        fee = filtered_df.iloc[0]['fee']
+        round1 = filtered_df.iloc[0]['round1']
+        round2 = filtered_df.iloc[0]['round2']
+        round3 = filtered_df.iloc[0]['round3']
+        round4 = filtered_df.iloc[0]['round4']
+        text_box_content = (
+            f"Fee: {fee}\n"
+            f"Round 1: {round1}\n"
+            f"Round 2: {round2}\n"
+            f"Round 3: {round3}\n"
+            f"Round 4: {round4}"
+        )
+    else:
+        text_box_content = "No data available for the selected options."
+
+    return container, map_fig, text_box_content
 
 if __name__ == '__main__':
     app.run_server(debug=True)
