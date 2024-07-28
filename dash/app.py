@@ -1,15 +1,31 @@
+
 import pandas as pd
 import plotly.express as px
-import plotly.figure_factory as ff
 import json
 from dash import Dash, dcc, html
 from dash.dependencies import Input, Output
-import plotly.graph_objects as go
 
 app = Dash(__name__)
 
 # Load data
 df = pd.read_csv("./data/engineer_data.csv")
+
+# Rename columns to match the expected names
+df = df.rename(columns={
+    'uni': 'มหาวิทยาลัย',
+    'major': 'ชื่อคณะ',
+    'depart': 'สาขาวิชา',
+    'course': 'ชื่อหลักสูตร',
+    'eng_name': 'ชื่อหลักสูตรภาษาอังกฤษ',
+    'fee': 'ค่าธรรมเนียมต่อหลักสูตร',
+    'round1': 'รอบ 1 Portfolio',
+    'round2': 'รอบ 2 Quota',
+    'round3': 'รอบ 3 Admission',
+    'round4': 'รอบ 4 Direct Admission'
+})
+
+# Debugging: Print column names
+print("Column names in DataFrame after renaming:", df.columns)
 
 with open('data/location_uni.json', 'r', encoding='utf-8') as f:
     unijson = json.load(f)
@@ -20,19 +36,18 @@ for uni_name, coords in unijson.items():
     longitude = coords['longitude']
     uni_coords[uni_name] = [latitude, longitude]
 
-df['latitude'] = df['uni'].map(lambda x: uni_coords.get(x, [None, None])[0])
-df['longitude'] = df['uni'].map(lambda x: uni_coords.get(x, [None, None])[1])
+df['latitude'] = df['มหาวิทยาลัย'].map(lambda x: uni_coords.get(x, [None, None])[0])
+df['longitude'] = df['มหาวิทยาลัย'].map(lambda x: uni_coords.get(x, [None, None])[1])
 
 def create_map(university=None):
-
-    dff = df[df['uni'] == university]
+    dff = df[df['มหาวิทยาลัย'] == university]
   
     fig = px.scatter_mapbox(
             dff,
             lat='latitude',
             lon='longitude',
-            hover_name='uni',
-            color_discrete_sequence=['OrangeRed'],
+            hover_name='มหาวิทยาลัย',
+            color_discrete_sequence=['#a62b4c'],
             zoom=6,
             height=500,
             mapbox_style="open-street-map"
@@ -41,16 +56,21 @@ def create_map(university=None):
 
     return fig
 
-# App
-app.layout = html.Div([
-    html.H1("มหาวิทยาลัยที่เปิดรับคณะวิศวกรรมศาสตร์", style={'text-align': 'center'}),
-    dcc.Dropdown(df.uni.unique(), 'มหาวิทยาลัยสงขลานครินทร์', id='dropdown-selection'),
-    dcc.Dropdown(id='department-dropdown', placeholder="เลือกสาขา"),
-    dcc.Dropdown(id='course-dropdown', placeholder="เลือกหลักสูตร"),
-    html.Div(id='output_container', children=[]),
-    html.Br(),
-    dcc.Graph(id='map', style={'width': '30%'}),
-    html.Div(id='text-box', style={'whiteSpace': 'pre-line'}) # Add this line for the text box
+# App layout
+app.layout = html.Div(style={'display': 'flex', 'flex-direction': 'row', 'font-family': 'Arial, sans-serif'}, children=[
+    html.Div(style={'flex': '1', 'padding': '20px', 'background-color': '#f0f2f5', 'border-radius': '10px', 'box-shadow': '0 2px 10px rgba(0,0,0,0.1)'}, children=[
+        html.H1("มหาวิทยาลัยที่เปิดรับคณะวิศวกรรมศาสตร์", style={'text-align': 'center', 'color': '#333'}),
+        dcc.Dropdown(df['มหาวิทยาลัย'].unique(), 'มหาวิทยาลัยสงขลานครินทร์', id='dropdown-selection', style={'margin-bottom': '20px'}),
+        dcc.Dropdown(id='department-dropdown', placeholder="เลือกสาขา", style={'margin-bottom': '20px'}),
+        dcc.Dropdown(id='course-dropdown', placeholder="เลือกหลักสูตร", style={'margin-bottom': '20px'}),
+        html.Div(id='output_container', children=[]),
+        html.Br(),
+        dcc.Graph(id='map', style={'width': '100%'})
+    ]),
+    html.Div(style={'flex': '1', 'padding': '20px', 'background-color': '#ffffff', 'border-radius': '10px', 'box-shadow': '0 2px 10px rgba(0,0,0,0.1)'}, children=[
+        html.H2('รายละเอียด', style={'text-align': 'center', 'color': '#333'}),
+        html.Div(id='text-box', style={'whiteSpace': 'pre-line', 'padding': '10px', 'color': '#555', 'font-size': '16px'})
+    ])
 ])
 
 # Update department dropdown options based on the selected university
@@ -58,25 +78,23 @@ app.layout = html.Div([
     Output('department-dropdown', 'options'),
     Input('dropdown-selection', 'value')
 )
-
 def set_department_options(selected_university):
-    filtered_df = df[df['uni'] == selected_university]
-    departments = filtered_df['depart'].unique()
+    filtered_df = df[df['มหาวิทยาลัย'] == selected_university]
+    departments = filtered_df['สาขาวิชา'].unique()
     return [{'label': dept, 'value': dept} for dept in departments]
 
-# Update course dropdown options based on the selected depart
+# Update course dropdown options based on the selected department
 @app.callback(
     Output('course-dropdown', 'options'),
     Input('dropdown-selection', 'value'),
     Input('department-dropdown', 'value')
 )
-
 def set_course_options(selected_university, selected_department):
-    filtered_df = df[(df['uni'] == selected_university) & (df['depart'] == selected_department)]
-    course = filtered_df['course'].unique()
-    return [{'label': cou, 'value': cou} for cou in course]
+    filtered_df = df[(df['มหาวิทยาลัย'] == selected_university) & (df['สาขาวิชา'] == selected_department)]
+    courses = filtered_df['ชื่อหลักสูตร'].unique()
+    return [{'label': course, 'value': course} for course in courses]
 
-# Update graphs based on selections
+# Update graphs and details box based on selections
 @app.callback(
     [Output('output_container', 'children'),
      Output('map', 'figure'),
@@ -85,11 +103,10 @@ def set_course_options(selected_university, selected_department):
      Input('department-dropdown', 'value'),
      Input('course-dropdown', 'value')]
 )
-
 def update_graphs(selected_university, selected_department, selected_course):
-    container = f"The University chosen by user was: {selected_university}, Department: {selected_department}, Course: {selected_course}"
+    container = f"{selected_university}"
 
-    dff = df[df["uni"] == selected_university]
+    dff = df[df["มหาวิทยาลัย"] == selected_university]
 
     # Map
     map_fig = create_map(selected_university)
@@ -101,23 +118,16 @@ def update_graphs(selected_university, selected_department, selected_course):
         font_color="PaleTurquoise"
     )
 
-    # Extract fee and round data
-    filtered_df = df[(df['uni'] == selected_university) & 
-                     (df['depart'] == selected_department) & 
-                     (df['course'] == selected_course)]
+    # Extract detailed information
+    filtered_df = df[(df['มหาวิทยาลัย'] == selected_university) & 
+                     (df['สาขาวิชา'] == selected_department) & 
+                     (df['ชื่อหลักสูตร'] == selected_course)]
     if not filtered_df.empty:
-        fee = filtered_df.iloc[0]['fee']
-        round1 = filtered_df.iloc[0]['round1']
-        round2 = filtered_df.iloc[0]['round2']
-        round3 = filtered_df.iloc[0]['round3']
-        round4 = filtered_df.iloc[0]['round4']
-        text_box_content = (
-            f"Fee: {fee}\n"
-            f"Round 1: {round1}\n"
-            f"Round 2: {round2}\n"
-            f"Round 3: {round3}\n"
-            f"Round 4: {round4}"
-        )
+        detail_info = filtered_df.iloc[0].to_dict()
+        # Construct text box content without 'มหาวิทยาลัย', 'latitude', and 'longitude'
+        excluded_keys = ['มหาวิทยาลัย', 'latitude', 'longitude']
+        text_box_content = "\n".join([f"{key}: {value}" for key, value in detail_info.items() if key not in excluded_keys])
+        text_box_content = f"{selected_university}\n" + text_box_content
     else:
         text_box_content = "No data available for the selected options."
 
