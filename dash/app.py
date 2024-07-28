@@ -32,12 +32,12 @@ def create_map(university=None):
             lat='latitude',
             lon='longitude',
             hover_name='uni',
-            color_discrete_sequence=['red'],
+            color_discrete_sequence=['OrangeRed'],
             zoom=6,
             height=500,
-            mapbox_style="carto-positron"
+            mapbox_style="open-street-map"
         )
-    
+    fig.update_traces(marker=dict(size=10, symbol='circle'))
 
     return fig
 
